@@ -3,6 +3,8 @@ package ru.idorofeev.samples.leetcode.tests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Random;
+
 // https://leetcode.com/problems/median-of-two-sorted-arrays/description/
 class MedianOfTwoSortedArrays {
 
@@ -31,6 +33,22 @@ class MedianOfTwoSortedArrays {
 
 		double medianSortedArrays = findMedianSortedArrays(nums1, nums2);
 		Assertions.assertEquals(1.5, medianSortedArrays);
+	}
+
+	@Test
+	void test4() {
+		int size = 100000000;
+		int[] nums1 = new int[size];
+		int[] nums2 = new int[size];
+
+		Random random = new Random();
+		for (int i = 0; i < size; i++) {
+			nums1[i] = random.nextInt(size);
+			nums2[i] = random.nextInt(size);
+		}
+
+		double medianSortedArrays = findMedianSortedArrays(nums1, nums2);
+		System.out.println(medianSortedArrays);
 	}
 
 	private double findMedianSortedArrays(int[] nums1, int[] nums2) {
