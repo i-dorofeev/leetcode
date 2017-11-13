@@ -5,8 +5,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import static java.lang.Boolean.TRUE;
-
 // https://leetcode.com/problems/regular-expression-matching/description/
 class RegularExpressionMatching {
 
@@ -55,9 +53,9 @@ class RegularExpressionMatching {
 			boolean multi = pattern.charAt(1) == '*';
 
 			Matcher next = parse(pattern.substring(multi ? 2 : 1));
-			return new Matcher(symbol, multi, next);
+			return multi ? new Matcher(symbol, 0, Integer.MAX_VALUE, next) : new Matcher(symbol, 1, 1, next);
 		} else {
-			return new Matcher(symbol, false, null);
+			return new Matcher(symbol, 1, 1, null);
 		}
 	}
 
@@ -66,39 +64,34 @@ class RegularExpressionMatching {
 		private static final char ANY = '.';
 
 		private final char symbol;
-		private final boolean multi;
+		private final int minOccurs;
+		private final int maxOccurs;
 		private Matcher next;
 
-		Matcher(char symbol, boolean multi, Matcher next) {
+		Matcher(char symbol, int minOccurs, int maxOccurs, Matcher next) {
 			this.symbol = symbol;
-			this.multi = multi;
+			this.minOccurs = minOccurs;
+			this.maxOccurs = maxOccurs;
 			this.next = next;
 		}
 
 		@Override
 		public String toString() {
+			boolean multi = minOccurs == 0 && maxOccurs == Integer.MAX_VALUE;
 			return "" + symbol + (multi ? "*" : "") + (next != null ? next.toString() : "");
 		}
 
 		boolean match(String input, int start) {
-			if (!multi) {
-				if (start >= input.length())
-					return false;
+			if (start >= input.length())
+				return minOccurs == 0 && (next == null || next.match(input, start));
 
-				Boolean match = match(input, start, 1);
-				return TRUE.equals(match);
-			} else {
-				if (start >= input.length())
-					return next == null || next.match(input, start);
-
-				for (int matchSize = 0; matchSize < input.length() - start + 1; matchSize++) {
-					Boolean match = match(input, start, matchSize);
-					if (match != null)
-						return match;
-				}
-
-				return false;
+			for (int matchSize = minOccurs; matchSize < input.length() - start + 1 && matchSize <= maxOccurs; matchSize++) {
+				Boolean match = match(input, start, matchSize);
+				if (match != null)
+					return match;
 			}
+
+			return false;
 		}
 
 		private Boolean match(String input, int start, int size) {
@@ -108,16 +101,9 @@ class RegularExpressionMatching {
 					return false;
 			}
 
-			if (next != null) {
-				boolean isMatch = next.match(input, start + i);
-				return isMatch ? true : null;
-			} else if (start + i < input.length()) {
-				return null;
-			} else if (start + i >= input.length()) {
-				return true;
-			}
-
-			throw new RuntimeException("should not get here");
+			return (next != null ?
+				next.match(input, start + i) :
+				(start + i >= input.length())) ? true : null;
 		}
 
 
